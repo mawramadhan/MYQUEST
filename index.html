@@ -175,24 +175,44 @@
                         <p class="text-slate-400 text-sm">Tukarkan Gold-mu dengan keuntungan di dunia nyata.</p>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-cardbg border border-slate-700 rounded-xl p-5 flex flex-col items-center text-center hover:border-rpggold/50 transition-colors">
-                            <div class="text-5xl mb-3">🧪</div>
-                            <h3 class="font-bold text-lg mb-1">Ramuan Pemulih (20 HP)</h3>
-                            <p class="text-xs text-slate-400 mb-4 flex-grow">Menyembuhkan kerusakan mental akibat kelalaian misi wajib.</p>
-                            <button onclick="buyItem('potion', 50)" class="w-full bg-rpggold hover:bg-yellow-500 text-black font-bold py-2 rounded-lg transition-colors">
-                                Beli - 50 Gold
-                            </button>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+                        
+                        <!-- Kartu 1: Ramuan -->
+                        <div class="perspective-1000 h-[190px] group cursor-pointer" onclick="this.querySelector('.flip-inner').classList.toggle('rotate-y-180')">
+                            <div class="flip-inner relative w-full h-full preserve-3d">
+                                <!-- Depan -->
+                                <div class="absolute w-full h-full backface-hidden bg-cardbg border border-slate-700 rounded-xl p-3 md:p-4 flex flex-col items-center justify-between text-center hover:border-rpggold/50 shadow-lg transition-colors">
+                                    <i class="ph-fill ph-flask text-4xl md:text-5xl text-rpggold drop-shadow-md"></i>
+                                    <h3 class="font-bold text-[11px] md:text-sm text-white">Ramuan Pemulih HP</h3>
+                                    <button onclick="event.stopPropagation(); buyItem('potion', 50)" class="w-full bg-rpggold hover:bg-yellow-500 text-black font-bold py-2 rounded-lg text-[10px] md:text-xs transition-colors">50 Gold</button>
+                                </div>
+                                <!-- Belakang -->
+                                <div class="absolute w-full h-full backface-hidden rotate-y-180 bg-slate-800 border-2 border-rpggold rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-lg">
+                                    <h3 class="font-bold text-rpggold text-[10px] md:text-xs mb-1">FUNGSI:</h3>
+                                    <p class="text-[10px] md:text-xs text-slate-300 leading-relaxed">Menyembuhkan kerusakan mental akibat kelalaian misi wajib. (+20 HP)</p>
+                                    <span class="text-[9px] md:text-[10px] text-slate-500 mt-3 absolute bottom-2">(Ketuk untuk membalik)</span>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="bg-cardbg border border-slate-700 rounded-xl p-5 flex flex-col items-center text-center hover:border-rpggold/50 transition-colors">
-                            <div class="text-5xl mb-3">🎮</div>
-                            <h3 class="font-bold text-lg mb-1">Izin Game Malam (1 Jam)</h3>
-                            <p class="text-xs text-slate-400 mb-4 flex-grow">Bermain game tanpa rasa bersalah. Istirahat juga bagian dari misi!</p>
-                            <button onclick="buyItem('game', 150)" class="w-full bg-rpggold hover:bg-yellow-500 text-black font-bold py-2 rounded-lg transition-colors">
-                                Beli - 150 Gold
-                            </button>
+                        <!-- Kartu 2: Game Pass -->
+                        <div class="perspective-1000 h-[190px] group cursor-pointer" onclick="this.querySelector('.flip-inner').classList.toggle('rotate-y-180')">
+                            <div class="flip-inner relative w-full h-full preserve-3d">
+                                <!-- Depan -->
+                                <div class="absolute w-full h-full backface-hidden bg-cardbg border border-slate-700 rounded-xl p-3 md:p-4 flex flex-col items-center justify-between text-center hover:border-rpggold/50 shadow-lg transition-colors">
+                                    <i class="ph-fill ph-game-controller text-4xl md:text-5xl text-rpggold drop-shadow-md"></i>
+                                    <h3 class="font-bold text-[11px] md:text-sm text-white">Izin Main Game</h3>
+                                    <button onclick="event.stopPropagation(); buyItem('game', 150)" class="w-full bg-rpggold hover:bg-yellow-500 text-black font-bold py-2 rounded-lg text-[10px] md:text-xs transition-colors">150 Gold</button>
+                                </div>
+                                <!-- Belakang -->
+                                <div class="absolute w-full h-full backface-hidden rotate-y-180 bg-slate-800 border-2 border-rpggold rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-lg">
+                                    <h3 class="font-bold text-rpggold text-[10px] md:text-xs mb-1">FUNGSI:</h3>
+                                    <p class="text-[10px] md:text-xs text-slate-300 leading-relaxed">Istirahat tanpa rasa bersalah. Memberikan kekebalan Hukuman HP selama 2 Jam penuh.</p>
+                                    <span class="text-[9px] md:text-[10px] text-slate-500 mt-3 absolute bottom-2">(Ketuk untuk membalik)</span>
+                                </div>
+                            </div>
                         </div>
+
                     </div>
                 </section>
 
@@ -204,7 +224,7 @@
                     </div>
 
                     <!-- Wadah Kartu Item (Bisa muat banyak ke samping/bawah) -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="inventory-list">
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4" id="inventory-list">
                         <!-- JS merender isi tas di sini -->
                     </div>
                 </section>
@@ -372,7 +392,7 @@
             <!-- Header (Judul & Jam Normal) -->
             <div class="mb-4 pr-6 relative">
                 <span id="detail-status-badge" class="text-[10px] font-bold px-2 py-1 rounded-full bg-slate-700 text-slate-300 mb-2 inline-block">STATUS</span>
-                <h3 id="detail-title" class="text-xl font-bold text-white leading-tight break-all">Judul Misi</h3>
+                <h3 id="detail-title" class="text-xl font-bold text-white leading-tight break-words">Judul Misi</h3>
                 <p id="detail-time" class="text-xs text-rpgpurple font-mono mt-1">00:00 - 00:00</p>
             </div>
 

@@ -580,7 +580,7 @@ function addSideQuest() {
 
 function buyItem(type, price) {
     const caps = { potion: 3, game: 1 }; // Batas maksimal item di tas
-    const names = { potion: "Ramuan Pemulih", game: "Izin Game Malam" };
+    const names = { potion: "Ramuan Pemulih HP", game: "Izin Main Game" };
 
     // Cek uang dulu (Layer 1)
     if (playerState.stats.gold < price) {
@@ -630,33 +630,68 @@ function renderInventory() {
 
     const inv = playerState.inventory;
     
-    list.innerHTML = `
-        <div class="bg-cardbg border ${inv.potion > 0 ? 'border-rpghp shadow-[0_0_15px_rgba(239,68,68,0.15)]' : 'border-slate-700 opacity-60'} rounded-xl p-5 flex flex-col justify-between transition-all relative overflow-hidden">
-            <div class="flex justify-between items-start mb-4 relative z-10">
-                <i class="ph-fill ph-flask text-5xl ${inv.potion > 0 ? 'text-rpghp drop-shadow-md' : 'text-slate-600'}"></i>
-                <span class="text-xs font-bold bg-slate-900 text-slate-300 px-3 py-1 rounded-lg border border-slate-700">x${inv.potion}/3</span>
+    // Cek Jika Tas Ransel Kosong Total
+    if (inv.potion === 0 && inv.game === 0) {
+        list.className = "col-span-full flex items-center justify-center"; // Hapus format grid sementara
+        list.innerHTML = `
+            <div class="text-center p-8 border-2 border-dashed border-slate-700 rounded-xl w-full max-w-sm mt-4 opacity-70">
+                <i class="ph-fill ph-wind text-5xl text-slate-600 mb-2"></i>
+                <h3 class="text-slate-300 font-bold text-sm mb-1">Ranselmu Kosong</h3>
+                <p class="text-slate-500 text-xs">Belum ada perlengkapan. Segera belanja di Toko Hadiah!</p>
             </div>
-            <div class="relative z-10 flex-grow">
-                <div class="text-sm font-bold text-white mb-1">Ramuan Pemulih</div>
-                <div class="text-[10px] text-slate-400 mb-4 leading-relaxed">Digunakan untuk memulihkan 20 HP secara instan.</div>
-            </div>
-            <button onclick="useItem('potion')" class="w-full relative z-10 font-bold py-2.5 rounded-lg text-xs transition-colors ${inv.potion > 0 ? 'bg-rpghp hover:bg-red-500 text-white shadow-md' : 'cursor-not-allowed bg-slate-800 text-slate-500 border border-slate-700'}" ${inv.potion > 0 ? '' : 'disabled'}>GUNAKAN</button>
-            ${inv.potion > 0 ? '<div class="absolute -bottom-10 -right-10 w-32 h-32 bg-rpghp/10 rounded-full blur-2xl"></div>' : ''}
-        </div>
+        `;
+        return;
+    }
 
-        <div class="bg-cardbg border ${inv.game > 0 ? 'border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.15)]' : 'border-slate-700 opacity-60'} rounded-xl p-5 flex flex-col justify-between transition-all relative overflow-hidden">
-            <div class="flex justify-between items-start mb-4 relative z-10">
-                <i class="ph-fill ph-game-controller text-5xl ${inv.game > 0 ? 'text-blue-500 drop-shadow-md' : 'text-slate-600'}"></i>
-                <span class="text-xs font-bold bg-slate-900 text-slate-300 px-3 py-1 rounded-lg border border-slate-700">x${inv.game}/1</span>
+    // Jika ada isinya, kembalikan format grid
+    list.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4";
+    let htmlContent = '';
+
+    // Kartu Ramuan (Hanya dirender jika jumlah > 0)
+    if (inv.potion > 0) {
+        htmlContent += `
+        <div class="perspective-1000 h-[190px] group cursor-pointer" onclick="this.querySelector('.flip-inner').classList.toggle('rotate-y-180')">
+            <div class="flip-inner relative w-full h-full preserve-3d">
+                <div class="absolute w-full h-full backface-hidden bg-cardbg border border-slate-700 hover:border-rpghp/50 shadow-lg transition-colors rounded-xl p-3 md:p-4 flex flex-col items-center justify-between text-center overflow-hidden">
+                    <span class="absolute top-2 right-2 text-[9px] md:text-[10px] font-bold bg-slate-900 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700 z-10">x${inv.potion}/3</span>
+                    <i class="ph-fill ph-flask text-4xl md:text-5xl text-rpghp drop-shadow-md z-10"></i>
+                    <h3 class="font-bold text-[11px] md:text-sm text-white z-10">Ramuan Pemulih HP</h3>
+                    <button onclick="event.stopPropagation(); useItem('potion')" class="w-full bg-rpghp hover:bg-red-500 text-white font-bold py-2 rounded-lg text-[10px] md:text-xs transition-colors z-10">GUNAKAN</button>
+                    <div class="absolute -bottom-10 -right-10 w-24 h-24 bg-rpghp/20 rounded-full blur-2xl"></div>
+                </div>
+                <div class="absolute w-full h-full backface-hidden rotate-y-180 bg-slate-800 border-2 border-rpghp rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-lg">
+                    <h3 class="font-bold text-rpghp text-[10px] md:text-xs mb-1">DETAIL:</h3>
+                    <p class="text-[10px] md:text-xs text-slate-300 leading-relaxed font-medium">Buka segelnya dan tenggak sekaligus untuk memulihkan 20 HP seketika.</p>
+                    <span class="text-[9px] md:text-[10px] text-slate-500 mt-3 absolute bottom-2">(Ketuk untuk membalik)</span>
+                </div>
             </div>
-            <div class="relative z-10 flex-grow">
-                <div class="text-sm font-bold text-white mb-1">Izin Game Malam</div>
-                <div class="text-[10px] text-slate-400 mb-4 leading-relaxed">Memberikan buff kekebalan HP selama 2 Jam.</div>
-            </div>
-            <button onclick="useItem('game')" class="w-full relative z-10 font-bold py-2.5 rounded-lg text-xs transition-colors ${inv.game > 0 ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-md' : 'cursor-not-allowed bg-slate-800 text-slate-500 border border-slate-700'}" ${inv.game > 0 ? '' : 'disabled'}>AKTIFKAN</button>
-            ${inv.game > 0 ? '<div class="absolute -bottom-10 -right-10 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl"></div>' : ''}
         </div>
-    `;
+        `;
+    }
+
+    // Kartu Game Pass (Hanya dirender jika jumlah > 0)
+    if (inv.game > 0) {
+        htmlContent += `
+        <div class="perspective-1000 h-[190px] group cursor-pointer" onclick="this.querySelector('.flip-inner').classList.toggle('rotate-y-180')">
+            <div class="flip-inner relative w-full h-full preserve-3d">
+                <div class="absolute w-full h-full backface-hidden bg-cardbg border border-slate-700 hover:border-blue-500/50 shadow-lg transition-colors rounded-xl p-3 md:p-4 flex flex-col items-center justify-between text-center overflow-hidden">
+                    <span class="absolute top-2 right-2 text-[9px] md:text-[10px] font-bold bg-slate-900 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700 z-10">x${inv.game}/1</span>
+                    <i class="ph-fill ph-game-controller text-4xl md:text-5xl text-blue-500 drop-shadow-md z-10"></i>
+                    <h3 class="font-bold text-[11px] md:text-sm text-white z-10">Izin Main Game</h3>
+                    <button onclick="event.stopPropagation(); useItem('game')" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-lg text-[10px] md:text-xs transition-colors z-10">AKTIFKAN</button>
+                    <div class="absolute -bottom-10 -right-10 w-24 h-24 bg-blue-500/20 rounded-full blur-2xl"></div>
+                </div>
+                <div class="absolute w-full h-full backface-hidden rotate-y-180 bg-slate-800 border-2 border-blue-500 rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-lg">
+                    <h3 class="font-bold text-blue-400 text-[10px] md:text-xs mb-1">DETAIL:</h3>
+                    <p class="text-[10px] md:text-xs text-slate-300 leading-relaxed font-medium">Mengaktifkan perisai khusus (Game Mode). Kebal dari pengurangan HP selama 2 Jam.</p>
+                    <span class="text-[9px] md:text-[10px] text-slate-500 mt-3 absolute bottom-2">(Ketuk untuk membalik)</span>
+                </div>
+            </div>
+        </div>
+        `;
+    }
+
+    list.innerHTML = htmlContent;
 }
 
 function showToast(message, type = 'info') {
