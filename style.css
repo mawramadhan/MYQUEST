@@ -1,0 +1,49 @@
+/* Custom Scrollbar for sleek look */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #0f172a; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+body { 
+    font-family: 'Inter', sans-serif; 
+    background-color: #0f172a; 
+    color: #f8fafc; 
+    overflow: hidden; 
+}
+
+/* Timeline grid background */
+.timeline-bg {
+    background-image: linear-gradient(#334155 1px, transparent 1px);
+    background-size: 100% 120px; /* Skala Diperbesar: 1 Jam = 120px */
+}
+
+/* Smooth transition for bars */
+.stat-bar { 
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
+}
+
+/* Hide views by default */
+.view-section { display: none; }
+.view-section.active { 
+    display: block; 
+    animation: fadeIn 0.3s ease; 
+}
+
+@keyframes fadeIn { 
+    from { opacity: 0; transform: translateY(10px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
+@keyframes slideInRight { 
+    from { transform: translateX(100%); } 
+    to { transform: translateX(0); } 
+}
+
+@keyframes fadeOut { 
+    from { opacity: 1; transform: translateX(0); } 
+    to { opacity: 0; transform: translateX(100%); } 
+}
+        
+.toast { 
+    animation: slideInRight 0.3s ease forwards; 
+}

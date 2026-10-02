@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyQuest: RPG Scheduler</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Link ke file CSS eksternal -->
+    <link rel="stylesheet" href="style.css">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        darkbg: '#0f172a', /* slate-900 */
+                        cardbg: '#1e293b', /* slate-800 */
+                        rpgpurple: '#a855f7',
+                        rpggold: '#fbbf24',
+                        rpghp: '#ef4444',
+                        rpgxp: '#3b82f6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="flex flex-col md:flex-row h-screen antialiased">
+
+    <!-- Navigation (Sidebar on Desktop, Bottom bar on Mobile) -->
+    <nav class="bg-cardbg border-r border-slate-700 w-full md:w-24 shrink-0 h-auto md:h-screen flex md:flex-col fixed bottom-0 md:relative z-40 order-2 md:order-1 shadow-[0_-4px_20px_rgba(0,0,0,0.3)] md:shadow-none">
+        
+        <!-- Logo Area (Hanya tampil di Desktop) -->
+        <div class="hidden md:flex flex-col items-center justify-center h-[104px] border-b border-slate-700 w-full shrink-0">
+            <i class="ph-fill ph-sword text-3xl text-rpgpurple transform -rotate-45 drop-shadow-md mb-1"></i>
+            <span class="font-black text-[10px] uppercase tracking-widest text-white drop-shadow-md">MYQUEST</span>
+        </div>
+
+        <!-- Container Tombol Navigasi -->
+        <div class="flex md:flex-col flex-grow justify-between md:justify-start md:pt-4 w-full px-1 md:px-3">
+            <button onclick="switchTab('main-quest', this)" class="nav-btn active flex-1 md:flex-none flex flex-col items-center justify-center py-3 px-0.5 md:p-3 rounded-xl text-slate-400 hover:bg-slate-700 hover:text-white transition-colors md:mb-4 group">
+                <i class="ph ph-calendar-check text-2xl group-[.active]:text-rpgpurple group-[.active]:ph-fill"></i>
+                <span class="text-[9px] md:text-[10px] font-medium mt-1 text-center group-[.active]:text-white">Utama</span>
+            </button>
+            <button onclick="switchTab('side-quest', this)" class="nav-btn flex-1 md:flex-none flex flex-col items-center justify-center py-3 px-0.5 md:p-3 rounded-xl text-slate-400 hover:bg-slate-700 hover:text-white transition-colors md:mb-4 group">
+                <i class="ph ph-list-checks text-2xl group-[.active]:text-rpgpurple group-[.active]:ph-fill"></i>
+                <span class="text-[9px] md:text-[10px] font-medium mt-1 text-center group-[.active]:text-white">Sampingan</span>
+            </button>
+            <button onclick="switchTab('rewards', this)" class="nav-btn flex-1 md:flex-none flex flex-col items-center justify-center py-3 px-0.5 md:p-3 rounded-xl text-slate-400 hover:bg-slate-700 hover:text-white transition-colors md:mb-4 group">
+                <i class="ph ph-treasure-chest text-2xl group-[.active]:text-rpggold group-[.active]:ph-fill"></i>
+                <span class="text-[9px] md:text-[10px] font-medium mt-1 text-center group-[.active]:text-white">Toko</span>
+            </button>
+            <button onclick="switchTab('inventory', this)" class="nav-btn flex-1 md:flex-none flex flex-col items-center justify-center py-3 px-0.5 md:p-3 rounded-xl text-slate-400 hover:bg-slate-700 hover:text-white transition-colors md:mb-4 group">
+                <i class="ph ph-backpack text-2xl group-[.active]:text-emerald-400 group-[.active]:ph-fill"></i>
+                <span class="text-[9px] md:text-[10px] font-medium mt-1 text-center group-[.active]:text-white">Ransel</span>
+            </button>
+            <button onclick="switchTab('profile', this)" class="nav-btn flex-1 md:flex-none flex flex-col items-center justify-center py-3 px-0.5 md:p-3 rounded-xl text-slate-400 hover:bg-slate-700 hover:text-white transition-colors group">
+                <i class="ph ph-user-circle-gear text-2xl group-[.active]:text-rpgpurple group-[.active]:ph-fill"></i>
+                <span class="text-[9px] md:text-[10px] font-medium mt-1 text-center group-[.active]:text-white">Profil</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow flex flex-col h-full overflow-hidden order-1 md:order-2">
+        
+        <!-- Header (Stats) -->
+        <header class="bg-cardbg border-b border-slate-700 p-4 md:px-8 md:h-[104px] shadow-sm flex items-center shrink-0 z-30">
+            <!-- Avatar -->
+            <div class="w-12 h-12 md:w-16 md:h-16 bg-slate-700 rounded-xl flex items-center justify-center text-2xl md:text-3xl shrink-0 shadow-inner">
+                👾
+            </div>
+            
+            <!-- Info & Stats -->
+            <div class="ml-4 flex-grow max-w-3xl">
+                <div class="flex items-center justify-between mb-1">
+                    <div class="flex items-center flex-wrap gap-2">
+                        <h1 id="ui-name" class="font-bold text-sm md:text-base">Andra</h1>
+                        <span id="ui-rank" class="text-[10px] md:text-xs bg-rpggold/20 text-rpggold border border-rpggold/50 px-2 py-0.5 rounded-full font-semibold">Rebahan Warrior</span>
+                        <!-- Indikator Buff Kebal -->
+                        <span id="ui-buff-indicator" class="hidden text-[10px] bg-blue-900/50 text-blue-300 border border-blue-500 px-2 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-[0_0_10px_rgba(59,130,246,0.4)]">
+                            <i class="ph-fill ph-shield-check"></i> GAME MODE AKTIF
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- HP & Gold Row -->
+                <div class="flex items-center gap-2 mb-1.5">
+                    <i class="ph-fill ph-heart text-rpghp text-sm"></i>
+                    <div class="h-2.5 bg-slate-700 rounded-full flex-grow relative overflow-hidden">
+                        <div id="ui-hp-bar" class="stat-bar h-full bg-rpghp absolute top-0 left-0" style="width: 100%;"></div>
+                    </div>
+                    <span id="ui-hp-txt" class="text-[10px] font-bold w-12 text-right">100/100</span>
+                    <div class="w-16 text-right flex items-center justify-end gap-1 text-rpggold font-bold text-xs">
+                        <i class="ph-fill ph-coin"></i> <span id="ui-gold">0</span>
+                    </div>
+                </div>
+
+                <!-- XP & Level Row -->
+                <div class="flex items-center gap-2">
+                    <i class="ph-fill ph-sparkle text-rpgxp text-sm"></i>
+                    <div class="h-2.5 bg-slate-700 rounded-full flex-grow relative overflow-hidden">
+                        <div id="ui-xp-bar" class="stat-bar h-full bg-rpgxp absolute top-0 left-0" style="width: 0%;"></div>
+                    </div>
+                    <span id="ui-xp-txt" class="text-[10px] font-bold w-12 text-right">0/100</span>
+                    <div class="w-16 text-right text-rpgpurple font-bold text-xs" id="ui-lvl">
+                        Lvl. 1
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Views Container (Scrollable) -->
+        <div class="flex-grow overflow-y-auto overflow-x-hidden relative pb-20 md:pb-0" id="scroll-container">
+            <div class="max-w-4xl mx-auto w-full p-4 md:p-8">
+
+                <!-- 1. MAIN QUEST (TIMELINE) VIEW -->
+                <section id="view-main-quest" class="view-section active">
+                    <div class="flex justify-between items-end mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-white">Misi Utama</h2>
+                            <p class="text-slate-400 text-sm hidden sm:block">Bertahan hidup dari rutinitas hari ini.</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button onclick="openAddQuestModal()" class="bg-cardbg border border-slate-600 hover:border-rpgpurple hover:text-rpgpurple text-slate-300 px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all">
+                                <i class="ph ph-plus font-bold"></i> <span class="hidden sm:inline">Quest</span>
+                            </button>
+                            <div id="current-time-display" class="font-mono text-rpgpurple font-bold text-lg bg-rpgpurple/10 px-3 py-1 rounded-lg">
+                                00:00
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Timeline Area -->
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-4 shadow-lg overflow-x-auto relative">
+                        <div id="timeline-container" class="relative h-[2880px] timeline-bg ml-10 border-l border-slate-600">
+                            <!-- JS Will Render Time Labels and Quest Blocks Here -->
+                            <!-- Current Time Indicator -->
+                            <div id="time-indicator" class="absolute z-20 transition-all duration-1000 flex items-center" style="top: 0px; left: -12px; right: 0;">
+                                <!-- Bola indikator (lebih besar di desktop: md:w-[18px] md:h-[18px]) dengan glow lebih terang -->
+                                <div class="w-3 h-3 md:w-[18px] md:h-[18px] bg-rpgpurple rounded-full shadow-[0_0_10px_#a855f7] md:shadow-[0_0_15px_#a855f7]"></div>
+                                <!-- Garis indikator (lebih tebal di desktop: md:h-[3px]) -->
+                                <div class="flex-grow h-[2px] md:h-[3px] bg-rpgpurple shadow-[0_0_8px_#a855f7]"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. SIDE QUEST VIEW -->
+                <section id="view-side-quest" class="view-section">
+                    <h2 class="text-2xl font-bold text-white mb-2">Misi Sampingan</h2>
+                    <p class="text-slate-400 text-sm mb-6">Tugas tambahan untuk bonus Gold dan XP. Tidak ada pinalti waktu.</p>
+                    
+                    <div class="flex gap-2 mb-6">
+                        <input type="text" id="new-sq-title" placeholder="Tambah misi baru..." class="flex-grow bg-cardbg border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-rpgpurple focus:ring-1 focus:ring-rpgpurple">
+                        <button onclick="addSideQuest()" class="bg-rpgpurple hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-bold transition-colors">
+                            <i class="ph ph-plus font-bold"></i>
+                        </button>
+                    </div>
+
+                    <div id="sq-list" class="space-y-3">
+                        <!-- JS renders here -->
+                    </div>
+                </section>
+
+                <!-- 3. REWARDS VIEW -->
+                <section id="view-rewards" class="view-section">
+                    <div class="text-center mb-8">
+                        <h2 class="text-2xl font-bold text-rpggold mb-2">Toko Hadiah</h2>
+                        <p class="text-slate-400 text-sm">Tukarkan Gold-mu dengan keuntungan di dunia nyata.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-cardbg border border-slate-700 rounded-xl p-5 flex flex-col items-center text-center hover:border-rpggold/50 transition-colors">
+                            <div class="text-5xl mb-3">🧪</div>
+                            <h3 class="font-bold text-lg mb-1">Ramuan Pemulih (20 HP)</h3>
+                            <p class="text-xs text-slate-400 mb-4 flex-grow">Menyembuhkan kerusakan mental akibat kelalaian misi wajib.</p>
+                            <button onclick="buyItem('potion', 50)" class="w-full bg-rpggold hover:bg-yellow-500 text-black font-bold py-2 rounded-lg transition-colors">
+                                Beli - 50 Gold
+                            </button>
+                        </div>
+
+                        <div class="bg-cardbg border border-slate-700 rounded-xl p-5 flex flex-col items-center text-center hover:border-rpggold/50 transition-colors">
+                            <div class="text-5xl mb-3">🎮</div>
+                            <h3 class="font-bold text-lg mb-1">Izin Game Malam (1 Jam)</h3>
+                            <p class="text-xs text-slate-400 mb-4 flex-grow">Bermain game tanpa rasa bersalah. Istirahat juga bagian dari misi!</p>
+                            <button onclick="buyItem('game', 150)" class="w-full bg-rpggold hover:bg-yellow-500 text-black font-bold py-2 rounded-lg transition-colors">
+                                Beli - 150 Gold
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. INVENTORY (TAS RANSEL) VIEW -->
+                <section id="view-inventory" class="view-section">
+                    <div class="text-center mb-8">
+                        <h2 class="text-2xl font-bold text-emerald-400 mb-2">Tas Ransel</h2>
+                        <p class="text-slate-400 text-sm">Tempat menyimpan semua barang dan perlengkapan dari Toko Hadiah.</p>
+                    </div>
+
+                    <!-- Wadah Kartu Item (Bisa muat banyak ke samping/bawah) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="inventory-list">
+                        <!-- JS merender isi tas di sini -->
+                    </div>
+                </section>
+
+                <!-- 5. PROFILE VIEW -->
+                <section id="view-profile" class="view-section">
+                    <h2 class="text-2xl font-bold text-white mb-6">Pengaturan & Profil</h2>
+
+                    <div class="bg-cardbg border border-slate-700 rounded-xl p-6 mb-6">
+                        <h3 class="font-bold text-lg mb-2">Manajemen Data (Backup)</h3>
+                        <p class="text-sm text-slate-400 mb-6">Aplikasi ini murni offline. Simpan datamu ke file fisik agar aman dari pembersihan riwayat browser.</p>
+                        <!-- (Sisa kode backup dan file import biarkan sama seperti sebelumnya) -->
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <button onclick="exportData()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors">
+                                <i class="ph ph-download-simple text-xl"></i> Unduh Data (.json)
+                            </button>
+                            
+                            <div class="flex-1 relative">
+                                <input type="file" id="import-file" accept=".json" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="importData(this)">
+                                <button class="w-full h-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors">
+                                    <i class="ph ph-upload-simple text-xl"></i> Pulihkan Data
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-red-500/10 border-l-4 border-red-500 p-4 rounded-r-lg flex items-start gap-3">
+                        <i class="ph-fill ph-warning-circle text-red-500 text-2xl shrink-0"></i>
+                        <div>
+                            <h4 class="font-bold text-red-400">Peringatan Kehilangan Data</h4>
+                            <p class="text-xs text-red-200 mt-1 leading-relaxed">Seluruh data (Gold, Jadwal, HP) disimpan di dalam LocalStorage Browser ini. Jika Anda melakukan <i>Clear Cache & Data</i> pada browser, akun Anda akan tereset menjadi Lvl 1. Biasakan melakukan Backup rutin.</p>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-20 right-4 md:right-8 z-50 flex flex-col gap-2"></div>
+
+    <!-- First Time Setup Modal -->
+    <div id="modal-first-time" class="fixed inset-0 bg-darkbg/90 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-cardbg border border-rpgpurple shadow-[0_0_40px_rgba(168,85,247,0.3)] rounded-2xl max-w-md w-full p-8 text-center relative overflow-hidden">
+            <div class="absolute -top-10 -left-10 w-32 h-32 bg-rpgpurple/20 rounded-full blur-2xl"></div>
+            <i class="ph-fill ph-shield-check text-6xl text-rpgpurple mb-4 relative z-10"></i>
+            <h2 class="text-2xl font-bold mb-2 relative z-10">Inisialisasi Sistem</h2>
+            <p class="text-slate-400 text-sm mb-6 relative z-10">Selamat datang di MyQuest. Jadwal terstruktur berbalut game RPG offline. Demi keamanan, pahami bahwa <b>data disimpan murni di peramban ini</b>.</p>
+            <button onclick="closeFirstTimeModal()" class="w-full bg-rpgpurple hover:bg-purple-500 text-white font-bold py-3 rounded-lg transition-colors relative z-10">
+                Saya Mengerti, Mulai Misi!
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="modal-game-over" class="fixed inset-0 bg-red-900/90 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-cardbg border-2 border-red-500 shadow-[0_0_50px_rgba(239,68,68,0.5)] rounded-2xl max-w-md w-full p-8 text-center">
+            <i class="ph-fill ph-skull text-7xl text-red-500 mb-4"></i>
+            <h2 class="text-3xl font-black text-red-500 mb-2 tracking-widest">MENTAL BREAKDOWN</h2>
+            <p class="text-red-200 text-sm mb-6">HP Anda telah mencapai 0 akibat terlalu banyak mengabaikan rutinitas wajib. Sistem terkunci.</p>
+            <button onclick="document.getElementById('modal-game-over').classList.add('hidden'); switchTab('rewards', document.querySelectorAll('.nav-btn')[3]);" class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-lg transition-colors shadow-lg">
+                Kunjungi Toko Pemulihan (Rewards)
+            </button>
+        </div>
+    </div>
+
+    <!-- Custom Confirm Modal -->
+    <div id="modal-confirm" class="fixed inset-0 bg-darkbg/90 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div id="modal-confirm-content" class="bg-cardbg border border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.25)] rounded-2xl max-w-sm w-full p-6 text-center transform scale-95 transition-transform duration-300">
+            <!-- Ikon diganti jadi centang hijau -->
+            <i class="ph-fill ph-check-circle text-5xl text-emerald-500 mb-4"></i>
+            <h3 class="text-xl font-bold mb-3 text-white">Konfirmasi Misi</h3>
+            <p id="confirm-quest-title" class="text-slate-300 text-sm mb-6 leading-relaxed">Apakah Anda yakin sudah mengerjakan misi ini?</p>
+            <div class="flex gap-3">
+                <button onclick="cancelConfirmModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 rounded-lg transition-colors">Belum</button>
+                <button onclick="executeQuestCompletion()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-lg transition-colors shadow-[0_4px_15px_rgba(16,185,129,0.4)]">Ya, Yakin!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Warning Modal -->
+    <div id="modal-warning" class="fixed inset-0 bg-darkbg/90 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div id="modal-warning-content" class="bg-cardbg border border-rpghp shadow-[0_0_30px_rgba(239,68,68,0.25)] rounded-2xl max-w-sm w-full p-6 text-center transform scale-95 transition-transform duration-300">
+            <i class="ph-fill ph-lock-key text-5xl text-rpghp mb-4"></i>
+            <h3 class="text-xl font-bold mb-3 text-white">Jadwal Terkunci</h3>
+            <p id="warning-message" class="text-slate-300 text-sm mb-6 leading-relaxed">Misi hanya bisa dikerjakan sesuai dengan jadwal yang telah ditentukan.</p>
+            <button onclick="closeWarningModal()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 rounded-lg transition-colors">Saya Mengerti</button>
+        </div>
+    </div>
+
+    <!-- Custom Delete Confirm Modal -->
+    <div id="modal-delete-confirm" class="fixed inset-0 bg-darkbg/90 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div id="modal-delete-content" class="bg-cardbg border border-rpghp shadow-[0_0_30px_rgba(239,68,68,0.25)] rounded-2xl max-w-sm w-full p-6 text-center transform scale-95 transition-transform duration-300">
+            <i class="ph-fill ph-trash text-5xl text-rpghp mb-4"></i>
+            <h3 class="text-xl font-bold mb-3 text-white">Hapus Misi</h3>
+            <p class="text-slate-300 text-sm mb-6 leading-relaxed">Apakah Anda yakin ingin menghapus misi ini? Data yang dihapus tidak dapat dikembalikan.</p>
+            <div class="flex gap-3">
+                <button onclick="cancelDeleteModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-2.5 rounded-lg transition-colors">Batal</button>
+                <button onclick="executeDeleteQuest()" class="flex-1 bg-rpghp hover:bg-red-500 text-white font-bold py-2.5 rounded-lg transition-colors shadow-[0_4px_15px_rgba(239,68,68,0.4)]">Ya, Hapus!</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add New Quest Modal -->
+    <div id="modal-add-quest" class="fixed inset-0 bg-darkbg/90 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div id="modal-add-quest-content" class="bg-cardbg border border-slate-600 shadow-[0_0_30px_rgba(0,0,0,0.5)] rounded-2xl max-w-md w-full p-6 transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2"><i class="ph-fill ph-plus-circle text-rpgpurple"></i> Tambah Misi</h3>
+                <button onclick="closeAddQuestModal()" class="text-slate-400 hover:text-white transition-colors"><i class="ph-bold ph-x text-xl"></i></button>
+            </div>
+            
+            <form id="form-add-quest" onsubmit="submitNewQuest(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-1">Judul Misi *</label>
+                    <input type="text" id="quest-title" maxlength="40" required class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-rpgpurple focus:outline-none" placeholder="Maksimal 40 karakter">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-1">Deskripsi (Opsional)</label>
+                    <textarea id="quest-desc" rows="2" maxlength="120" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-rpgpurple focus:outline-none" placeholder="Maksimal 120 karakter..."></textarea>
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-400 mb-1">Jam Mulai *</label>
+                        <input type="time" id="quest-start" required class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-rpgpurple focus:outline-none">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-400 mb-1">Jam Selesai *</label>
+                        <input type="time" id="quest-end" required class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-rpgpurple focus:outline-none">
+                    </div>
+                </div>
+                <!-- Kotak Centang Wajib dan Harian -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="flex items-center gap-2 bg-slate-800 p-2.5 rounded-lg border border-slate-600">
+                        <input type="checkbox" id="quest-wajib" class="w-4 h-4 accent-rpghp cursor-pointer rounded">
+                        <label for="quest-wajib" class="text-xs font-bold text-white cursor-pointer select-none leading-tight">Misi Wajib <span class="text-red-400 text-[10px] block font-normal">-10 HP jika abai</span></label>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-800 p-2.5 rounded-lg border border-slate-600">
+                        <input type="checkbox" id="quest-daily" class="w-4 h-4 accent-blue-500 cursor-pointer rounded">
+                        <label for="quest-daily" class="text-xs font-bold text-white cursor-pointer select-none leading-tight">Misi Harian <span class="text-blue-400 text-[10px] block font-normal">Otomatis berulang tiap hari</span></label>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-rpggold mb-1"><i class="ph-fill ph-coin"></i> Reward Gold</label>
+                        <input type="number" id="quest-gold" required min="0" value="20" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-rpggold focus:outline-none">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-rpgxp mb-1"><i class="ph-fill ph-sparkle"></i> Reward XP</label>
+                        <input type="number" id="quest-xp" required min="0" value="20" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-rpgxp focus:outline-none">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-rpgpurple hover:bg-purple-500 text-white font-bold py-3 rounded-lg transition-colors shadow-[0_4px_15px_rgba(168,85,247,0.3)] mt-4">
+                    Simpan ke Jadwal
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quest Detail & Action Modal -->
+    <div id="modal-quest-detail" class="fixed inset-0 bg-darkbg/90 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div id="modal-quest-detail-content" class="bg-cardbg border border-slate-600 shadow-[0_0_30px_rgba(0,0,0,0.5)] rounded-2xl max-w-sm w-full p-6 transform scale-95 transition-transform duration-300 relative">
+            <button onclick="closeQuestDetail()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"><i class="ph-bold ph-x text-xl"></i></button>
+
+            <!-- Header (Judul & Jam Normal) -->
+            <div class="mb-4 pr-6 relative">
+                <span id="detail-status-badge" class="text-[10px] font-bold px-2 py-1 rounded-full bg-slate-700 text-slate-300 mb-2 inline-block">STATUS</span>
+                <h3 id="detail-title" class="text-xl font-bold text-white leading-tight break-all">Judul Misi</h3>
+                <p id="detail-time" class="text-xs text-rpgpurple font-mono mt-1">00:00 - 00:00</p>
+            </div>
+
+            <!-- Centered Circular Timer (Di tengah, lebih besar) -->
+            <div id="detail-timer-container" class="hidden flex-col items-center justify-center mb-6">
+                <div class="relative w-24 h-24 flex items-center justify-center">
+                    <svg class="-rotate-90 w-24 h-24 transform drop-shadow-md">
+                        <!-- Lingkaran Background (Radius 42, Keliling ~264) -->
+                        <circle cx="48" cy="48" r="42" stroke="currentColor" stroke-width="5" fill="transparent" class="text-slate-800" />
+                        <!-- Lingkaran Progress Dinamis -->
+                        <circle id="detail-timer-circle" cx="48" cy="48" r="42" stroke="currentColor" stroke-width="5" fill="transparent" class="text-emerald-400 transition-all duration-1000 ease-linear" stroke-dasharray="264" stroke-dashoffset="0" stroke-linecap="round"/>
+                    </svg>
+                    <!-- Teks Jam di Tengah -->
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <span class="text-[8px] text-slate-400 uppercase tracking-wider mb-0.5">Sisa Waktu</span>
+                        <span id="detail-timer-text" class="text-sm font-bold text-emerald-400 font-mono tracking-tighter">00:00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="detail-desc-container" class="mb-4 bg-slate-800/50 p-3 rounded-lg border border-slate-700 hidden">
+                <p id="detail-desc" class="text-sm text-slate-300 italic break-all"></p>
+            </div>
+
+            <div class="flex gap-4 mb-6 text-sm bg-slate-900/50 p-3 rounded-lg">
+                <div class="flex items-center gap-1 text-rpggold font-bold"><i class="ph-fill ph-coin text-lg"></i> <span id="detail-gold">0</span></div>
+                <div class="flex items-center gap-1 text-rpgxp font-bold"><i class="ph-fill ph-sparkle text-lg"></i> <span id="detail-xp">0</span></div>
+                <div id="detail-wajib" class="hidden flex-1 justify-end items-center gap-1 text-rpghp font-bold text-[11px]"><i class="ph-fill ph-warning-circle"></i> WAJIB</div>
+            </div>
+
+            <div class="flex gap-3">
+                <button id="btn-detail-delete" class="flex-1 bg-slate-700 hover:bg-red-900 hover:border-red-500 border border-transparent text-slate-300 hover:text-red-100 font-bold py-2.5 rounded-lg transition-colors flex justify-center items-center gap-2"><i class="ph-fill ph-trash text-lg"></i> Hapus</button>
+                <button id="btn-detail-complete" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-lg transition-colors shadow-[0_4px_15px_rgba(16,185,129,0.3)] flex justify-center items-center gap-2"><i class="ph-bold ph-check text-lg"></i> Selesaikan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Level Up Modal -->
+    <div id="modal-levelup" class="fixed inset-0 bg-emerald-900/95 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-500">
+        <div id="modal-levelup-content" class="bg-cardbg border-2 border-rpggold shadow-[0_0_50px_rgba(250,204,21,0.5)] rounded-2xl max-w-sm w-full p-8 text-center transform scale-90 transition-transform duration-500 relative overflow-hidden">
+            <!-- Efek Cahaya Belakang -->
+            <div class="absolute inset-0 bg-gradient-to-t from-rpggold/20 to-transparent opacity-50"></div>
+            
+            <i class="ph-fill ph-star text-6xl text-rpggold mb-2 animate-bounce relative z-10"></i>
+            <h2 class="text-3xl font-black text-white mb-1 uppercase tracking-widest relative z-10">Level Up!</h2>
+            <p class="text-emerald-400 font-bold mb-6 text-lg relative z-10">Kamu mencapai Level <span id="levelup-new-level" class="text-2xl">2</span></p>
+            
+            <div class="bg-slate-900/80 rounded-lg p-4 mb-6 relative z-10 border border-slate-700">
+                <p class="text-slate-400 text-xs mb-3 font-bold uppercase tracking-wider">Hadiah Pencapaian</p>
+                <div class="flex justify-center items-center gap-6 font-bold text-xl">
+                    <span class="text-rpggold flex items-center gap-1.5"><i class="ph-fill ph-coin text-2xl"></i> +<span id="levelup-gold-reward">0</span></span>
+                    <span class="text-rpghp flex items-center gap-1.5"><i class="ph-fill ph-heart text-2xl"></i> MAX</span>
+                </div>
+            </div>
+            <button onclick="closeLevelUp()" class="w-full relative z-10 bg-rpggold hover:bg-yellow-500 text-slate-900 font-black py-3 rounded-lg transition-colors shadow-[0_4px_20px_rgba(250,204,21,0.4)]">Lanjutkan Perjalanan</button>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="modal-gameover" class="fixed inset-0 bg-red-950/95 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-500">
+        <div id="modal-gameover-content" class="bg-cardbg border-2 border-red-600 shadow-[0_0_50px_rgba(220,38,38,0.5)] rounded-2xl max-w-sm w-full p-8 text-center transform scale-90 transition-transform duration-500">
+            <i class="ph-fill ph-skull text-6xl text-red-500 mb-2 animate-pulse"></i>
+            <h2 class="text-3xl font-black text-red-500 mb-2 uppercase tracking-widest">Game Over</h2>
+            <p class="text-slate-300 mb-6 text-sm leading-relaxed">HP kamu habis karena terlalu banyak rutinitas wajib yang terlewat. Kamu pingsan dan harus dirawat.</p>
+            
+            <div class="bg-slate-900/80 rounded-lg p-4 mb-6 border border-red-900/50">
+                <p class="text-red-400/80 text-xs mb-2 font-bold uppercase tracking-wider">Biaya Perawatan</p>
+                <span class="text-red-500 font-bold text-2xl flex items-center justify-center gap-1.5"><i class="ph-fill ph-coin"></i> -<span id="gameover-gold-lost">0</span></span>
+                <!-- Baris baru untuk deskripsi sistem denda -->
+                <p id="gameover-penalty-desc" class="text-[10px] text-red-300/60 mt-2 font-medium italic"></p>
+            </div>
+            <button onclick="closeGameOver()" class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-3 rounded-lg transition-colors shadow-[0_4px_20px_rgba(220,38,38,0.4)]">Bangkit Kembali</button>
+        </div>
+    </div>
+
+    <!-- Tautkan file JS eksternal -->
+    <script src="app.js"></script>
+</body>
+</html>
