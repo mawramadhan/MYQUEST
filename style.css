@@ -1,5 +1,5 @@
-/* Custom Scrollbar for sleek look */
-::-webkit-scrollbar { width: 8px; }
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: #0f172a; }
 ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #475569; }
@@ -11,46 +11,55 @@ body {
     overflow: hidden; 
 }
 
-/* Timeline grid background */
+/* Timeline */
 .timeline-bg {
     background-image: linear-gradient(#334155 1px, transparent 1px);
-    background-size: 100% 120px; /* Skala Diperbesar: 1 Jam = 120px */
+    background-size: 100% 120px; 
 }
 
-/* Smooth transition for bars */
-.stat-bar { 
-    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); 
-}
-
-/* Hide views by default */
+/* Transitions */
+.stat-bar { transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
 .view-section { display: none; }
-.view-section.active { 
-    display: block; 
-    animation: fadeIn 0.3s ease; 
-}
+.view-section.active { display: block; animation: fadeIn 0.3s ease; }
 
 @keyframes fadeIn { 
     from { opacity: 0; transform: translateY(10px); } 
     to { opacity: 1; transform: translateY(0); } 
 }
-
 @keyframes slideInRight { 
     from { transform: translateX(100%); } 
     to { transform: translateX(0); } 
 }
-
 @keyframes fadeOut { 
     from { opacity: 1; transform: translateX(0); } 
     to { opacity: 0; transform: translateX(100%); } 
 }
-        
-.toast { 
-    animation: slideInRight 0.3s ease forwards; 
-}
+.toast { animation: slideInRight 0.3s ease forwards; }
 
-/* Efek 3D Flip Card - Sangat ringan (GPU Accelerated) */
+/* 3D Flip Card */
 .perspective-1000 { perspective: 1000px; }
 .preserve-3d { transform-style: preserve-3d; }
 .backface-hidden { backface-visibility: hidden; }
 .rotate-y-180 { transform: rotateY(180deg); }
 .flip-inner { transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* Game Mode Effect */
+body.is-frozen .quest-block {
+    filter: grayscale(40%) sepia(10%) hue-rotate(180deg) brightness(1.2) contrast(1.1);
+    background-color: rgba(14, 165, 233, 0.15) !important;
+    border-color: rgba(34, 211, 238, 0.6) !important;
+    box-shadow: 0 0 15px rgba(34, 211, 238, 0.2);
+    cursor: not-allowed !important;
+    transform: none !important; /* Disable hover scale */
+}
+body.is-frozen .quest-block * {
+    color: #e0f2fe !important; /* text-sky-100 */
+}
+body.is-frozen .quest-block .text-emerald-500,
+body.is-frozen .quest-block .text-red-500 {
+    color: #e0f2fe !important; 
+}
+
+.text-shadow-glow { text-shadow: 0 0 10px rgba(34,211,238,0.8); }
+.animate-spin-slow { animation: spin 4s linear infinite; }
+@keyframes spin { 100% { transform: rotate(360deg); } }

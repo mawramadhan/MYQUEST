@@ -17,18 +17,14 @@ const defaultState = {
 };
 
 let playerState = JSON.parse(localStorage.getItem('myquest_data')) || JSON.parse(JSON.stringify(defaultState));
-
-// Keamanan pembaruan data untuk pemain lama (Mencegah error tas kosong)
 if (!playerState.inventory) playerState.inventory = { potion: 0, game: 0 };
 if (!playerState.buffs) playerState.buffs = { gameModeUntil: null };
 
-// Save data safely
 function saveToStorage() {
     localStorage.setItem('myquest_data', JSON.stringify(playerState));
     updateUIStats();
 }
 
-// === UI NAVIGATION & RENDERERS ===
 function switchTab(tabId, btnElement) {
     if(btnElement) {
         document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active', 'bg-slate-700', 'text-white'));
@@ -40,38 +36,27 @@ function switchTab(tabId, btnElement) {
 }
 
 function updateUIStats() {
-    // Cap HP
     playerState.stats.hp = Math.min(playerState.stats.hp, playerState.stats.maxHp);
     playerState.stats.hp = Math.max(playerState.stats.hp, 0);
-
     const xpNeeded = playerState.stats.lvl * 100;
 
-    // Update DOM elements
     const uiName = document.getElementById('ui-name');
     if(uiName) uiName.innerText = playerState.stats.name;
-    
     const uiRank = document.getElementById('ui-rank');
     if(uiRank) uiRank.innerText = playerState.stats.rank;
-    
     const uiHpTxt = document.getElementById('ui-hp-txt');
     if(uiHpTxt) uiHpTxt.innerText = `${playerState.stats.hp}/${playerState.stats.maxHp}`;
-    
     const uiHpBar = document.getElementById('ui-hp-bar');
     if(uiHpBar) uiHpBar.style.width = `${(playerState.stats.hp / playerState.stats.maxHp) * 100}%`;
-    
     const uiXpTxt = document.getElementById('ui-xp-txt');
     if(uiXpTxt) uiXpTxt.innerText = `${playerState.stats.xp}/${xpNeeded}`;
-    
     const uiXpBar = document.getElementById('ui-xp-bar');
     if(uiXpBar) uiXpBar.style.width = `${(playerState.stats.xp / xpNeeded) * 100}%`;
-    
     const uiGold = document.getElementById('ui-gold');
     if(uiGold) uiGold.innerText = playerState.stats.gold;
-    
     const uiLvl = document.getElementById('ui-lvl');
     if(uiLvl) uiLvl.innerText = `Lvl. ${playerState.stats.lvl}`;
 
-    // Update Indikator Buff Game Mode
     const buffIndicator = document.getElementById('ui-buff-indicator');
     if (buffIndicator) {
         if (playerState.buffs && playerState.buffs.gameModeUntil && Date.now() < playerState.buffs.gameModeUntil) {
@@ -80,7 +65,6 @@ function updateUIStats() {
             buffIndicator.classList.add('hidden');
         }
     }
-
     checkGameOver();
 }
 
@@ -91,9 +75,9 @@ function renderTimeline() {
 
     for (let i = 0; i <= 24; i++) {
         const label = document.createElement('div');
-        label.className = 'time-label absolute text-[10px] text-slate-500 font-mono';
+        label.className = 'time-label absolute text-[10px] md:text-xs font-semibold text-slate-400 font-mono';
         label.style.top = `${i * 120 - 7}px`;
-        label.style.left = `-35px`;
+        label.style.left = `-42px`;
         label.innerText = `${i.toString().padStart(2, '0')}:00`;
         container.appendChild(label);
     }
@@ -101,18 +85,10 @@ function renderTimeline() {
     let events = playerState.quests.map(quest => {
         const [sH, sM] = quest.startTime.split(':').map(Number);
         const [eH, eM] = quest.endTime.split(':').map(Number);
-        return {
-            quest: quest,
-            start: (sH * 60) + sM,
-            end: (eH * 60) + eM,
-            col: 0,
-            maxCol: 1
-        };
+        return { quest: quest, start: (sH * 60) + sM, end: (eH * 60) + eM, col: 0, maxCol: 1 };
     });
-
     events.sort((a, b) => a.start - b.start);
 
-    // 3. Algoritma Overlap
     let clusters = [];
     let currentCluster = [];
     let clusterEnd = 0;
@@ -128,8 +104,7 @@ function renderTimeline() {
     });
     if (currentCluster.length > 0) clusters.push(currentCluster);
 
-    let globalMaxCol = 1; // Variabel baru pelacak tumpukan maksimal
-
+    let globalMaxCol = 1; 
     clusters.forEach(cluster => {
         let columns = [];
         cluster.forEach(ev => {
@@ -150,21 +125,18 @@ function renderTimeline() {
         });
         cluster.forEach(ev => { 
             ev.maxCol = columns.length; 
-            if (columns.length > globalMaxCol) globalMaxCol = columns.length; // Catat tumpukan terbanyak
+            if (columns.length > globalMaxCol) globalMaxCol = columns.length; 
         });
     });
 
-    // ATUR LEBAR MINIMUM TIMELINE
-    // Setiap tumpukan butuh minimal 140px agar teks tetap terbaca
     container.style.minWidth = `max(100%, ${globalMaxCol * 140}px)`;
 
-    // 4. Render Blok
     events.forEach(ev => {
         const quest = ev.quest;
         const topPos = ev.start * 2;
         const height = (ev.end - ev.start) * 2;
-
         const block = document.createElement('div');
+        
         let bgClass = "bg-cardbg border-slate-600 hover:border-slate-400 hover:bg-slate-700";
         let borderClass = quest.isWajib ? "border-l-rpghp" : "border-l-rpgpurple";
 
@@ -178,11 +150,9 @@ function renderTimeline() {
 
         const isCompact = height <= 45; 
         const isLarge = height >= 80;
-
-        const layoutClass = isCompact ? "flex-row items-center px-2 py-1" : "flex-col justify-start gap-0.5 px-3 py-2";
+        const layoutClass = isCompact ? "flex-row items-center px-2 py-1" : "flex-col justify-start gap-1 px-3 py-2";
 
         block.className = `quest-block absolute border border-l-4 ${bgClass} ${borderClass} rounded-r-lg ${layoutClass} shadow-md overflow-hidden transition-all cursor-pointer z-10 hover:z-30 hover:scale-[1.02]`;
-        
         block.style.top = `${topPos}px`;
         block.style.height = `${Math.max(height, 30)}px`; 
 
@@ -192,8 +162,16 @@ function renderTimeline() {
         
         block.style.left = `${leftPercent}%`;
         block.style.width = `${widthPercent}%`;
-
-        block.onclick = () => openQuestDetail(quest.id);
+        
+        // Disabled clicking behavior if Game Mode is active
+        block.onclick = () => {
+            const isGameMode = playerState.buffs.gameModeUntil && Date.now() < playerState.buffs.gameModeUntil;
+            if (isGameMode) {
+                showToast("Jadwal membeku 🧊 Fokus main game tanpa penyesalan!", "info");
+            } else {
+                openQuestDetail(quest.id);
+            }
+        };
 
         const dailyIcon = quest.isDaily ? '<i class="ph-bold ph-arrows-clockwise text-blue-400" title="Misi Harian"></i>' : '';
 
@@ -209,15 +187,14 @@ function renderTimeline() {
         } else if (isLarge) {
             block.innerHTML = `
                 <div class="font-bold text-xs md:text-sm text-white truncate w-full" title="${quest.title}">${quest.title}</div>
-                ${quest.description ? `<div class="text-[10px] text-slate-400 truncate w-full italic" title="${quest.description}">${quest.description}</div>` : ''}
-                
+                ${quest.description ? `<div class="text-[10px] md:text-xs text-slate-400 truncate w-full italic" title="${quest.description}">${quest.description}</div>` : ''}
                 <div class="mt-auto flex flex-col gap-1 w-full overflow-hidden">
-                    <div class="text-[9px] md:text-[10px] text-slate-400 flex items-center gap-1.5 truncate w-full">
+                    <div class="text-[10px] md:text-xs text-slate-400 flex items-center gap-1.5 truncate w-full">
                         <span class="shrink-0 flex items-center gap-1"><i class="ph ph-clock text-rpgpurple"></i> ${quest.startTime} - ${quest.endTime} ${dailyIcon}</span>
                         ${quest.status === 'DONE' ? '<span class="text-emerald-500 font-bold shrink-0">SELESAI</span>' : ''}
                         ${quest.status === 'FAILED' ? '<span class="text-red-500 font-bold shrink-0">GAGAL</span>' : ''}
                     </div>
-                    <div class="text-[9px] md:text-[10px] font-bold flex items-center gap-2 truncate w-full">
+                    <div class="text-[10px] md:text-xs font-bold flex items-center gap-2 truncate w-full">
                         <span class="text-rpggold shrink-0 flex items-center gap-0.5"><i class="ph-fill ph-coin"></i> ${quest.gold}</span>
                         <span class="text-rpgxp shrink-0 flex items-center gap-0.5"><i class="ph-fill ph-sparkle"></i> ${quest.xp}</span>
                     </div>
@@ -226,15 +203,14 @@ function renderTimeline() {
         } else {
             block.innerHTML = `
                 <div class="font-bold text-xs md:text-sm text-white truncate w-full" title="${quest.title}">${quest.title}</div>
-                ${quest.description ? `<div class="text-[10px] text-slate-400 truncate w-full italic" title="${quest.description}">${quest.description}</div>` : ''}
-                <div class="text-[9px] md:text-[10px] text-slate-400 mt-auto flex items-center gap-1.5 truncate w-full">
+                ${quest.description ? `<div class="text-[10px] md:text-xs text-slate-400 truncate w-full italic" title="${quest.description}">${quest.description}</div>` : ''}
+                <div class="text-[10px] md:text-xs text-slate-400 mt-auto flex items-center gap-1.5 truncate w-full">
                     <span class="shrink-0 flex items-center gap-1"><i class="ph ph-clock text-rpgpurple"></i> ${quest.startTime} - ${quest.endTime} ${dailyIcon}</span>
                     ${quest.status === 'DONE' ? '<span class="text-emerald-500 font-bold shrink-0">SELESAI</span>' : ''}
                     ${quest.status === 'FAILED' ? '<span class="text-red-500 font-bold shrink-0">GAGAL</span>' : ''}
                 </div>
             `;
         }
-        
         container.appendChild(block);
     });
 }
@@ -244,7 +220,6 @@ let activeQuestInterval = null;
 function openQuestDetail(id) {
     const quest = playerState.quests.find(q => q.id === id);
     if (!quest) return;
-
     clearInterval(activeQuestInterval);
 
     document.getElementById('detail-title').innerText = quest.title;
@@ -255,7 +230,6 @@ function openQuestDetail(id) {
     const timerContainer = document.getElementById('detail-timer-container');
     const timerCircle = document.getElementById('detail-timer-circle');
     const timerText = document.getElementById('detail-timer-text');
-    
     let extraIcon = quest.isDaily ? '<i class="ph-bold ph-arrows-clockwise text-blue-400 ml-1" title="Misi Harian"></i>' : '';
     timeEl.innerHTML = `${quest.startTime} - ${quest.endTime} ${extraIcon}`;
 
@@ -264,11 +238,10 @@ function openQuestDetail(id) {
     
     if(timerCircle) {
         timerCircle.className = "transition-all duration-1000 ease-linear text-emerald-400";
-        timerText.className = "text-sm font-bold text-emerald-400 font-mono tracking-tighter";
+        timerText.className = "text-sm md:text-base font-bold text-emerald-400 font-mono tracking-tighter";
     }
     
     if (quest.status === 'AVAILABLE' && currentString >= quest.startTime && currentString < quest.endTime && timerCircle) {
-        
         timerContainer.classList.remove('hidden');
         timerContainer.classList.add('flex');
 
@@ -281,7 +254,6 @@ function openQuestDetail(id) {
 
         const updateTimer = () => {
             const diff = endDate - new Date();
-            
             timerCircle.classList.remove('text-emerald-400', 'text-amber-400', 'text-red-500');
             timerText.classList.remove('text-emerald-400', 'text-amber-400', 'text-red-500', 'text-red-400', 'text-[10px]');
             
@@ -310,16 +282,15 @@ function openQuestDetail(id) {
             
             if (percentLeft > 0.5) {
                 timerCircle.classList.add('text-emerald-400');
-                timerText.classList.add('text-emerald-400', 'text-sm');
+                timerText.classList.add('text-emerald-400', 'text-sm', 'md:text-base');
             } else if (percentLeft > 0.15) {
                 timerCircle.classList.add('text-amber-400');
-                timerText.classList.add('text-amber-400', 'text-sm');
+                timerText.classList.add('text-amber-400', 'text-sm', 'md:text-base');
             } else {
                 timerCircle.classList.add('text-red-500');
-                timerText.classList.add('text-red-500', 'text-sm');
+                timerText.classList.add('text-red-500', 'text-sm', 'md:text-base');
             }
         };
-        
         updateTimer(); 
         activeQuestInterval = setInterval(updateTimer, 1000);
         
@@ -345,7 +316,7 @@ function openQuestDetail(id) {
     
     if(quest.status === 'AVAILABLE') {
         statusBadge.innerText = 'TERSEDIA';
-        statusBadge.className = 'text-[10px] font-bold px-2 py-1 rounded-full bg-blue-900/50 text-blue-300 border border-blue-700 mb-2 inline-block';
+        statusBadge.className = 'text-[10px] md:text-xs font-bold px-2 py-1 rounded-full bg-blue-900/50 text-blue-300 border border-blue-700 mb-2 inline-block';
         btnComplete.style.display = 'flex';
         btnComplete.onclick = () => { 
             closeQuestDetail(); 
@@ -353,11 +324,11 @@ function openQuestDetail(id) {
         };
     } else if (quest.status === 'DONE') {
         statusBadge.innerText = 'SELESAI';
-        statusBadge.className = 'text-[10px] font-bold px-2 py-1 rounded-full bg-emerald-900/50 text-emerald-300 border border-emerald-700 mb-2 inline-block';
+        statusBadge.className = 'text-[10px] md:text-xs font-bold px-2 py-1 rounded-full bg-emerald-900/50 text-emerald-300 border border-emerald-700 mb-2 inline-block';
         btnComplete.style.display = 'none';
     } else if (quest.status === 'FAILED') {
         statusBadge.innerText = 'GAGAL';
-        statusBadge.className = 'text-[10px] font-bold px-2 py-1 rounded-full bg-red-900/50 text-red-300 border border-red-700 mb-2 inline-block';
+        statusBadge.className = 'text-[10px] md:text-xs font-bold px-2 py-1 rounded-full bg-red-900/50 text-red-300 border border-red-700 mb-2 inline-block';
         btnComplete.style.display = 'none';
     }
 
@@ -391,14 +362,12 @@ let pendingQuestId = null;
 function completeMainQuest(id) {
     const quest = playerState.quests.find(q => q.id === id);
     if (quest && quest.status === 'AVAILABLE') {
-        
         const now = new Date();
-        const h = now.getHours();
-        const m = now.getMinutes();
-        const currentString = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`;
+        const currentString = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
 
         if (currentString < quest.startTime || currentString > quest.endTime) {
-            document.getElementById('warning-message').innerText = `Misi ini tidak bisa dikerjakan sekarang.\nKerjakan di antara jam ${quest.startTime} - ${quest.endTime}.`;
+            document.getElementById('warning-message').innerText = `Misi ini tidak bisa dikerjakan sekarang.
+Kerjakan di antara jam ${quest.startTime} - ${quest.endTime}.`;
             const warningModal = document.getElementById('modal-warning');
             const warningContent = document.getElementById('modal-warning-content');
             warningModal.classList.remove('hidden');
@@ -410,7 +379,8 @@ function completeMainQuest(id) {
         }
 
         pendingQuestId = id;
-        document.getElementById('confirm-quest-title').innerText = `Apakah Anda yakin sudah mengerjakan misi:\n"${quest.title}"?`;
+        document.getElementById('confirm-quest-title').innerText = `Apakah Anda yakin sudah mengerjakan misi:
+"${quest.title}"?`;
         
         const modal = document.getElementById('modal-confirm');
         const modalContent = document.getElementById('modal-confirm-content');
@@ -445,20 +415,16 @@ function closeWarningModal() {
 
 function executeQuestCompletion() {
     if (!pendingQuestId) return;
-
     const questIndex = playerState.quests.findIndex(q => q.id === pendingQuestId);
     if (questIndex > -1) {
         const quest = playerState.quests[questIndex];
         quest.status = 'DONE';
         playerState.stats.gold += quest.gold;
         playerState.stats.xp += quest.xp;
-
         checkLevelUp(); 
-
         saveToStorage();
         renderTimeline();
     }
-
     closeConfirmModal();
 }
 
@@ -468,7 +434,6 @@ let pendingDeleteType = null;
 function openDeleteModal(id, type) {
     pendingDeleteId = id;
     pendingDeleteType = type;
-    
     const modal = document.getElementById('modal-delete-confirm');
     const modalContent = document.getElementById('modal-delete-content');
     modal.classList.remove('hidden');
@@ -492,7 +457,6 @@ function closeDeleteModal() {
 
 function executeDeleteQuest() {
     if (pendingDeleteId === null) return;
-    
     if (pendingDeleteType === 'main') {
         playerState.quests = playerState.quests.filter(q => q.id !== pendingDeleteId);
         renderTimeline();
@@ -502,7 +466,6 @@ function executeDeleteQuest() {
         renderSideQuests();
         showToast("Tugas opsional dihapus.", "info");
     }
-    
     saveToStorage();
     closeDeleteModal();
 }
@@ -516,14 +479,14 @@ function renderSideQuests() {
                 <div class="bg-cardbg border border-slate-700 rounded-xl p-4 flex justify-between items-center shadow-sm hover:border-slate-500 transition-colors">
                     <div>
                         <div class="font-bold text-sm text-white">${sq.title}</div>
-                        <div class="text-xs text-rpggold mt-1"><i class="ph-fill ph-coin"></i> ${sq.gold} Gold | <i class="ph-fill ph-sparkle"></i> ${sq.xp} XP</div>
+                        <div class="text-xs text-rpggold mt-1.5"><i class="ph-fill ph-coin"></i> ${sq.gold} Gold | <i class="ph-fill ph-sparkle"></i> ${sq.xp} XP</div>
                     </div>
                     <div class="flex items-center gap-3 shrink-0">
                         <button onclick="openDeleteModal(${sq.id}, 'side')" class="text-slate-600 hover:text-red-500 transition-colors" title="Hapus Tugas">
-                            <i class="ph-fill ph-trash text-lg"></i>
+                            <i class="ph-fill ph-trash text-xl"></i>
                         </button>
-                        <button onclick="completeSideQuest(${sq.id})" class="w-8 h-8 rounded border-2 border-slate-500 hover:border-emerald-500 hover:bg-emerald-500/20 flex items-center justify-center transition-colors">
-                            <i class="ph-bold ph-check text-slate-500 hover:text-emerald-500 opacity-0 hover:opacity-100 transition-opacity"></i>
+                        <button onclick="completeSideQuest(${sq.id})" class="w-10 h-10 rounded-lg border-2 border-slate-500 hover:border-emerald-500 hover:bg-emerald-500/20 flex items-center justify-center transition-colors">
+                            <i class="ph-bold ph-check text-xl text-slate-500 hover:text-emerald-500 opacity-0 hover:opacity-100 transition-opacity"></i>
                         </button>
                     </div>
                 </div>
@@ -535,21 +498,16 @@ function renderSideQuests() {
     }
 }
 
-// === Setup klik area luar untuk menutup pop-up otomatis ===
 const outsideClickModals = [
     { id: 'modal-add-quest', closeFn: closeAddQuestModal },
     { id: 'modal-quest-detail', closeFn: closeQuestDetail },
     { id: 'modal-warning', closeFn: closeWarningModal }
 ];
-
 outsideClickModals.forEach(m => {
     const modalEl = document.getElementById(m.id);
     if (modalEl) {
         modalEl.addEventListener('click', (e) => {
-            // Pastikan yang diklik adalah area latar belakang (bukan isi card-nya)
-            if (e.target === modalEl) {
-                m.closeFn();
-            }
+            if (e.target === modalEl) { m.closeFn(); }
         });
     }
 });
@@ -579,25 +537,36 @@ function addSideQuest() {
 }
 
 function buyItem(type, price) {
-    const caps = { potion: 3, game: 1 }; // Batas maksimal item di tas
+    const caps = { potion: 3, game: 1 };
     const names = { potion: "Ramuan Pemulih HP", game: "Izin Main Game" };
 
-    // Cek uang dulu (Layer 1)
     if (playerState.stats.gold < price) {
         return showToast("Gold tidak cukup! Selesaikan misi dulu.", 'error');
     }
-
-    // Jika uang cukup, cek kapasitas tas (Layer 2)
     if (playerState.inventory[type] >= caps[type]) {
         return showToast(`Tas penuh! Maksimal ${caps[type]} ${names[type]}.`, 'error');
     }
 
-    // Eksekusi pembelian jika uang cukup dan tas muat
     playerState.stats.gold -= price;
-    playerState.inventory[type]++; // Masukkan ke tas
+    playerState.inventory[type]++; 
     showToast(`Berhasil dibeli! Cek Tas Ransel.`, 'success');
     saveToStorage();
     renderInventory();
+}
+
+function stopGameMode() {
+    playerState.buffs.gameModeUntil = null;
+    saveToStorage();
+    showToast("Game Mode dihentikan secara manual.", "info");
+    
+    // Force hide elements immediately for responsiveness
+    const gmHud = document.getElementById('game-mode-hud');
+    const frostOverlay = document.getElementById('frost-overlay');
+    if (gmHud) gmHud.classList.add('hidden', 'opacity-0');
+    if (frostOverlay) frostOverlay.classList.add('hidden', 'opacity-0');
+    document.body.classList.remove('is-frozen');
+    
+    updateUIStats();
 }
 
 function useItem(type) {
@@ -613,15 +582,17 @@ function useItem(type) {
         showToast("Glug glug... HP Pulih 20 poin!", 'success');
         
     } else if (type === 'game') {
+        if (playerState.buffs.gameModeUntil && Date.now() < playerState.buffs.gameModeUntil) {
+            return showToast("Game Mode masih aktif! Selesaikan dulu.", 'error');
+        }
         playerState.inventory.game--;
-        // Aktifkan Game Mode selama 2 Jam (2 jam * 60 mnt * 60 dtk * 1000 ms)
         playerState.buffs.gameModeUntil = Date.now() + (2 * 60 * 60 * 1000);
-        showToast("GAME MODE AKTIF! Kamu kebal hukuman selama 2 Jam.", 'success');
+        showToast("GAME MODE AKTIF! Garis waktu membeku.", 'success');
     }
 
     saveToStorage();
     renderInventory();
-    updateUIStats(); // Perbarui UI darah dan label buff
+    updateUIStats();
 }
 
 function renderInventory() {
@@ -630,12 +601,11 @@ function renderInventory() {
 
     const inv = playerState.inventory;
     
-    // Cek Jika Tas Ransel Kosong Total
     if (inv.potion === 0 && inv.game === 0) {
-        list.className = "col-span-full flex items-center justify-center"; // Hapus format grid sementara
+        list.className = "col-span-full flex items-center justify-center relative z-10"; 
         list.innerHTML = `
             <div class="text-center p-8 border-2 border-dashed border-slate-700 rounded-xl w-full max-w-sm mt-4 opacity-70">
-                <i class="ph-fill ph-wind text-5xl text-slate-600 mb-2"></i>
+                <i class="ph-fill ph-wind text-5xl text-slate-600 mb-3"></i>
                 <h3 class="text-slate-300 font-bold text-sm mb-1">Ranselmu Kosong</h3>
                 <p class="text-slate-500 text-xs">Belum ada perlengkapan. Segera belanja di Toko Hadiah!</p>
             </div>
@@ -643,48 +613,49 @@ function renderInventory() {
         return;
     }
 
-    // Jika ada isinya, kembalikan format grid
-    list.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4";
+    list.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4 relative z-10";
     let htmlContent = '';
 
-    // Kartu Ramuan (Hanya dirender jika jumlah > 0)
     if (inv.potion > 0) {
         htmlContent += `
-        <div class="perspective-1000 h-[190px] group cursor-pointer" onclick="this.querySelector('.flip-inner').classList.toggle('rotate-y-180')">
+        <div class="perspective-1000 h-[180px] md:h-[200px] group cursor-pointer" onclick="this.querySelector('.flip-inner').classList.toggle('rotate-y-180')">
             <div class="flip-inner relative w-full h-full preserve-3d">
-                <div class="absolute w-full h-full backface-hidden bg-cardbg border border-slate-700 hover:border-rpghp/50 shadow-lg transition-colors rounded-xl p-3 md:p-4 flex flex-col items-center justify-between text-center overflow-hidden">
-                    <span class="absolute top-2 right-2 text-[9px] md:text-[10px] font-bold bg-slate-900 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700 z-10">x${inv.potion}/3</span>
-                    <i class="ph-fill ph-flask text-4xl md:text-5xl text-rpghp drop-shadow-md z-10"></i>
-                    <h3 class="font-bold text-[11px] md:text-sm text-white z-10">Ramuan Pemulih HP</h3>
-                    <button onclick="event.stopPropagation(); useItem('potion')" class="w-full bg-rpghp hover:bg-red-500 text-white font-bold py-2 rounded-lg text-[10px] md:text-xs transition-colors z-10">GUNAKAN</button>
+                <div class="absolute w-full h-full backface-hidden bg-cardbg border border-slate-700 hover:border-rpghp/50 shadow-lg transition-colors rounded-xl p-3 md:p-4 flex flex-col items-center text-center overflow-hidden">
+                    <span class="absolute top-3 right-3 text-[10px] md:text-xs font-bold bg-slate-900 text-slate-300 px-2 py-0.5 rounded border border-slate-700 z-10">x${inv.potion}/3</span>
+                    <div class="flex-grow flex flex-col items-center justify-center gap-2 z-10 w-full mt-2">
+                        <i class="ph-fill ph-flask text-5xl md:text-6xl text-rpghp drop-shadow-md"></i>
+                        <h3 class="font-bold text-xs md:text-sm text-white">Ramuan Pemulih HP</h3>
+                    </div>
+                    <button onclick="event.stopPropagation(); useItem('potion')" class="w-full shrink-0 bg-rpghp hover:bg-red-500 text-white font-bold py-2 md:py-2.5 rounded-lg text-[10px] md:text-xs transition-colors z-10 mt-auto">GUNAKAN</button>
                     <div class="absolute -bottom-10 -right-10 w-24 h-24 bg-rpghp/20 rounded-full blur-2xl"></div>
                 </div>
                 <div class="absolute w-full h-full backface-hidden rotate-y-180 bg-slate-800 border-2 border-rpghp rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-lg">
-                    <h3 class="font-bold text-rpghp text-[10px] md:text-xs mb-1">DETAIL:</h3>
-                    <p class="text-[10px] md:text-xs text-slate-300 leading-relaxed font-medium">Buka segelnya dan tenggak sekaligus untuk memulihkan 20 HP seketika.</p>
-                    <span class="text-[9px] md:text-[10px] text-slate-500 mt-3 absolute bottom-2">(Ketuk untuk membalik)</span>
+                    <h3 class="font-bold text-rpghp text-xs mb-1.5">DETAIL:</h3>
+                    <p class="text-[10px] md:text-xs text-slate-300 leading-relaxed font-medium px-1">Buka segelnya dan tenggak sekaligus untuk memulihkan 20 HP seketika.</p>
+                    <span class="text-[10px] md:text-xs text-slate-500 mt-3 absolute bottom-3">(Ketuk membalik)</span>
                 </div>
             </div>
         </div>
         `;
     }
 
-    // Kartu Game Pass (Hanya dirender jika jumlah > 0)
     if (inv.game > 0) {
         htmlContent += `
-        <div class="perspective-1000 h-[190px] group cursor-pointer" onclick="this.querySelector('.flip-inner').classList.toggle('rotate-y-180')">
+        <div class="perspective-1000 h-[180px] md:h-[200px] group cursor-pointer" onclick="this.querySelector('.flip-inner').classList.toggle('rotate-y-180')">
             <div class="flip-inner relative w-full h-full preserve-3d">
-                <div class="absolute w-full h-full backface-hidden bg-cardbg border border-slate-700 hover:border-blue-500/50 shadow-lg transition-colors rounded-xl p-3 md:p-4 flex flex-col items-center justify-between text-center overflow-hidden">
-                    <span class="absolute top-2 right-2 text-[9px] md:text-[10px] font-bold bg-slate-900 text-slate-300 px-1.5 py-0.5 rounded border border-slate-700 z-10">x${inv.game}/1</span>
-                    <i class="ph-fill ph-game-controller text-4xl md:text-5xl text-blue-500 drop-shadow-md z-10"></i>
-                    <h3 class="font-bold text-[11px] md:text-sm text-white z-10">Izin Main Game</h3>
-                    <button onclick="event.stopPropagation(); useItem('game')" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-lg text-[10px] md:text-xs transition-colors z-10">AKTIFKAN</button>
+                <div class="absolute w-full h-full backface-hidden bg-cardbg border border-slate-700 hover:border-blue-500/50 shadow-lg transition-colors rounded-xl p-3 md:p-4 flex flex-col items-center text-center overflow-hidden">
+                    <span class="absolute top-3 right-3 text-[10px] md:text-xs font-bold bg-slate-900 text-slate-300 px-2 py-0.5 rounded border border-slate-700 z-10">x${inv.game}/1</span>
+                    <div class="flex-grow flex flex-col items-center justify-center gap-2 z-10 w-full mt-2">
+                        <i class="ph-fill ph-game-controller text-5xl md:text-6xl text-blue-500 drop-shadow-md"></i>
+                        <h3 class="font-bold text-xs md:text-sm text-white">Izin Main Game</h3>
+                    </div>
+                    <button onclick="event.stopPropagation(); useItem('game')" class="w-full shrink-0 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 md:py-2.5 rounded-lg text-[10px] md:text-xs transition-colors z-10 mt-auto">AKTIFKAN</button>
                     <div class="absolute -bottom-10 -right-10 w-24 h-24 bg-blue-500/20 rounded-full blur-2xl"></div>
                 </div>
                 <div class="absolute w-full h-full backface-hidden rotate-y-180 bg-slate-800 border-2 border-blue-500 rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-lg">
-                    <h3 class="font-bold text-blue-400 text-[10px] md:text-xs mb-1">DETAIL:</h3>
-                    <p class="text-[10px] md:text-xs text-slate-300 leading-relaxed font-medium">Mengaktifkan perisai khusus (Game Mode). Kebal dari pengurangan HP selama 2 Jam.</p>
-                    <span class="text-[9px] md:text-[10px] text-slate-500 mt-3 absolute bottom-2">(Ketuk untuk membalik)</span>
+                    <h3 class="font-bold text-blue-400 text-xs mb-1.5">DETAIL:</h3>
+                    <p class="text-[10px] md:text-xs text-slate-300 leading-relaxed font-medium px-1">Diciptakan agar kamu bisa bermain game tanpa penyesalan. Mengaktifkan perisai khusus (Game Mode) yang membuatmu kebal dari pengurangan HP selama 2 Jam penuh.</p>
+                    <span class="text-[10px] md:text-xs text-slate-500 mt-3 absolute bottom-3">(Ketuk membalik)</span>
                 </div>
             </div>
         </div>
@@ -703,8 +674,8 @@ function showToast(message, type = 'info') {
     if(type === 'success') { colorClass = "bg-emerald-900 border-l-emerald-400 text-emerald-100"; icon = "ph-check-circle"; }
     if(type === 'error') { colorClass = "bg-red-900 border-l-red-400 text-red-100"; icon = "ph-warning-circle"; }
 
-    toast.className = `toast flex items-center gap-3 border-l-4 p-4 rounded shadow-lg min-w-[250px] ${colorClass}`;
-    toast.innerHTML = `<i class="ph-fill ${icon} text-xl"></i> <span class="text-sm font-medium">${message}</span>`;
+    toast.className = `toast flex items-center gap-3 border-l-4 p-4 rounded shadow-lg min-w-[250px] text-xs md:text-sm ${colorClass}`;
+    toast.innerHTML = `<i class="ph-fill ${icon} text-xl md:text-2xl"></i> <span class="font-medium">${message}</span>`;
     
     container.appendChild(toast);
     setTimeout(() => {
@@ -715,43 +686,29 @@ function showToast(message, type = 'info') {
 
 function checkDailyReset() {
     const today = new Date().toLocaleDateString();
-    
-    // Cek apakah hari sudah berganti (melewati jam 12 malam)
     if (playerState.lastPlayDate !== today) {
-        
-        // 1. FILTER: Hapus semua misi utama yang BUKAN harian (isDaily == false/undefined)
         playerState.quests = playerState.quests.filter(q => q.isDaily);
-        
-        // 2. RESET: Kembalikan status misi harian yang tersisa menjadi tersedia
         playerState.quests.forEach(q => q.status = 'AVAILABLE');
-        
-        // 3. RESET SIDE QUEST: Kembalikan misi sampingan yang sudah selesai
         playerState.sideQuests.forEach(sq => {
             if(sq.status === 'DONE') sq.status = 'AVAILABLE';
         });
-        
-        // Catat tanggal hari ini agar tidak reset berulang-ulang
         playerState.lastPlayDate = today;
         saveToStorage();
-        
         showToast("Hari baru! Misi non-harian telah dibersihkan.", 'info');
         renderTimeline();
         renderSideQuests();
     }
 }
 
-// === FUNGSI MESIN WAKTU (SUDAH DIPERBAIKI) ===
 function gameLoop() {
     const now = new Date();
     const h = now.getHours();
     const m = now.getMinutes();
     const currentString = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
     
-    // Perbarui Teks Jam di Kanan Atas
     const timeDisplay = document.getElementById('current-time-display');
     if (timeDisplay) timeDisplay.innerText = currentString;
     
-    // Perbarui Garis Waktu Ungu
     const timeIndicator = document.getElementById('time-indicator');
     if (timeIndicator) {
         const totalMinutes = (h * 60) + m;
@@ -759,24 +716,58 @@ function gameLoop() {
     }
     
     let isUpdated = false;
-
-    // Cek apakah Game Mode sedang aktif
     const isGameMode = playerState.buffs.gameModeUntil && Date.now() < playerState.buffs.gameModeUntil;
+    
+    const gmHud = document.getElementById('game-mode-hud');
+    const gmTimer = document.getElementById('gm-timer');
+    const frostOverlay = document.getElementById('frost-overlay');
+
+    if (isGameMode) {
+        document.body.classList.add('is-frozen');
+        if (gmHud && gmHud.classList.contains('hidden')) {
+            gmHud.classList.remove('hidden');
+            setTimeout(() => {
+                gmHud.classList.remove('opacity-0', '-translate-y-10', 'scale-95');
+                frostOverlay.classList.remove('hidden');
+                setTimeout(() => frostOverlay.classList.remove('opacity-0'), 10);
+            }, 10);
+        }
+        
+        const diff = playerState.buffs.gameModeUntil - Date.now();
+        const diffH = Math.floor(diff / 3600000);
+        const diffM = Math.floor((diff % 3600000) / 60000);
+        const diffS = Math.floor((diff % 60000) / 1000);
+        if (gmTimer) gmTimer.innerText = `${diffH.toString().padStart(2,'0')}:${diffM.toString().padStart(2,'0')}:${diffS.toString().padStart(2,'0')}`;
+        
+    } else {
+        document.body.classList.remove('is-frozen');
+        if (gmHud && !gmHud.classList.contains('hidden')) {
+            gmHud.classList.add('opacity-0', '-translate-y-10', 'scale-95');
+            frostOverlay.classList.add('opacity-0');
+            setTimeout(() => {
+                gmHud.classList.add('hidden');
+                frostOverlay.classList.add('hidden');
+            }, 500);
+        }
+        // Auto-clear if expired
+        if (playerState.buffs.gameModeUntil) {
+            playerState.buffs.gameModeUntil = null;
+            saveToStorage();
+            showToast("Waktu bermain telah habis. Kembali ke rutinitas!", 'info');
+        }
+    }
 
     playerState.quests.forEach(quest => {
         if (quest.status === 'AVAILABLE' && currentString >= quest.endTime) {
             quest.status = 'FAILED';
             if (quest.isWajib) {
-                // Jika tidak kebal, kurangi HP
                 if (!isGameMode) {
                     playerState.stats.hp -= 10;
-                    
                     if (playerState.stats.hp <= 0) {
                         playerState.stats.hp = 0; 
                         triggerGameOver();
                     }
                 }
-                // Jika isGameMode = true, blokir pengurangan HP (Kebal)
             }
             isUpdated = true;
         }
@@ -789,7 +780,7 @@ function gameLoop() {
 }
 
 function checkGameOver() {
-    const modal = document.getElementById('modal-game-over');
+    const modal = document.getElementById('modal-gameover');
     if (playerState.stats.hp <= 0 && modal.classList.contains('hidden')) {
         modal.classList.remove('hidden');
     }
@@ -907,13 +898,8 @@ function submitNewQuest(event) {
     closeAddQuestModal();
 }
 
-// ==========================================
-// SISTEM LEVEL UP & GAME OVER
-// ==========================================
-
 function checkLevelUp() {
     let maxXP = playerState.stats.lvl * 100; 
-    
     if (playerState.stats.xp >= maxXP) {
         playerState.stats.xp -= maxXP; 
         playerState.stats.lvl += 1;
@@ -942,16 +928,12 @@ function triggerGameOver() {
     let goldLost = 0;
     let penaltyDesc = "";
 
-    // Kalkulasi 50% dari Gold saat ini
     let halfGold = Math.floor(playerState.stats.gold * 0.5);
     
-    // LOGIKA DENDA DINAMIS
     if (playerState.stats.gold > 0 && halfGold >= 50) {
-        // Jika sedang kaya: Denda 50%
         goldLost = halfGold;
         penaltyDesc = "*Denda 50% dari total tabungan Gold saat ini.";
     } else {
-        // Jika miskin / minus: Denda mutlak 50 Gold
         goldLost = 50;
         if (playerState.stats.gold <= 0) {
             penaltyDesc = "*Denda mutlak 50 Gold (Sistem Hutang) karena tabungan kosong.";
@@ -963,13 +945,10 @@ function triggerGameOver() {
     playerState.stats.gold -= goldLost;
     playerState.stats.hp = playerState.stats.maxHp; 
     
-    // Update Teks di UI Modal
     document.getElementById('gameover-gold-lost').innerText = goldLost;
-    
     const descElement = document.getElementById('gameover-penalty-desc');
     if (descElement) descElement.innerText = penaltyDesc;
     
-    // Tampilkan Modal
     const modal = document.getElementById('modal-gameover');
     const content = document.getElementById('modal-gameover-content');
     modal.classList.remove('hidden');
@@ -995,14 +974,11 @@ function closeGameOver() {
     setTimeout(() => { modal.classList.add('hidden'); }, 500);
 }
 
-// === LOGIKA KEMBALI KE DETAIL SAAT BATAL ===
 function cancelConfirmModal() {
-    const idToReopen = pendingQuestId; // Simpan ID sebelum dihapus oleh fungsi close
+    const idToReopen = pendingQuestId; 
     closeConfirmModal();
     if (idToReopen) {
-        setTimeout(() => {
-            openQuestDetail(idToReopen); // Buka kembali setelah animasi tutup selesai
-        }, 300);
+        setTimeout(() => { openQuestDetail(idToReopen); }, 300);
     }
 }
 
@@ -1011,11 +987,8 @@ function cancelDeleteModal() {
     const type = pendingDeleteType;
     closeDeleteModal();
     
-    // Hanya buka kembali pop-up detail jika yang dibatalkan adalah misi utama
     if (idToReopen && type === 'main') {
-        setTimeout(() => {
-            openQuestDetail(idToReopen);
-        }, 300);
+        setTimeout(() => { openQuestDetail(idToReopen); }, 300);
     }
 }
 
